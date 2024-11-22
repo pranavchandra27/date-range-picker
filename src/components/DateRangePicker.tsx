@@ -275,45 +275,74 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
 export default DateRangePicker;
 
-const formatJson = (obj: any): JSX.Element[] => {
-  const renderObject = (obj: any, indent = 0): JSX.Element[] => {
-    const result: JSX.Element[] = [];
-    if (typeof obj === "object" && obj !== null) {
-      result.push(
-        <span key={`opening-${indent}`} style={{ color: "gray" }}>
-          {"{"}
-        </span>
-      );
+const formatJson = (obj: any, indent = 0): JSX.Element[] => {
+  const result: JSX.Element[] = [];
 
-      for (const key in obj) {
-        const value = obj[key];
-        result.push(
-          <div key={`${key}-${indent}`} style={{ paddingLeft: indent + 20 }}>
-            <span style={{ color: "purple" }}>"{key}"</span>:{" "}
-            {typeof value === "object" && value !== null ? (
-              renderObject(value, indent + 2)
-            ) : (
-              <span
-                style={{
-                  color: typeof value === "number" ? "orange" : "green",
-                }}
-              >
-                {JSON.stringify(value)}
-              </span>
-            )}
-          </div>
-        );
-      }
-
-      result.push(
-        <span key={`closing-${indent}`} style={{ color: "gray" }}>
-          {"}"}
-        </span>
-      );
+  const renderValue = (value: any) => {
+    if (typeof value === "string") {
+      return <span style={{ color: "green" }}>"{value}"</span>;
+    } else if (typeof value === "number") {
+      return <span style={{ color: "orange" }}>{value}</span>;
+    } else if (typeof value === "boolean") {
+      return <span style={{ color: "blue" }}>{value.toString()}</span>;
+    } else if (value === null) {
+      return <span style={{ color: "red" }}>null</span>;
+    } else if (typeof value === "object") {
+      return <>{renderObject(value, indent + 2)}</>;
+    } else {
+      return <span>{value}</span>;
     }
-
-    return result;
   };
 
-  return renderObject(obj);
+  const renderObject = (obj: any, indent: number) => {
+    const elements: JSX.Element[] = [];
+    elements.push(
+      <span key={`opening-${indent}`} style={{ color: "gray" }}>
+        {"{"}
+      </span>
+    );
+
+    Object.keys(obj).forEach((key, index, array) => {
+      elements.push(
+        <div key={`${key}-${index}`} style={{ paddingLeft: indent }}>
+          <span style={{ color: "purple" }}>"{key}"</span>:{" "}
+          {renderValue(obj[key])}
+          {index < array.length - 1 ? "," : ""}
+        </div>
+      );
+    });
+
+    elements.push(
+      <span key={`closing-${indent}`} style={{ color: "gray" }}>
+        {"}"}
+      </span>
+    );
+
+    return elements;
+  };
+
+  if (Array.isArray(obj)) {
+    result.push(
+      <span key={`opening-array-${indent}`} style={{ color: "gray" }}>
+        {"["}
+      </span>
+    );
+    obj.forEach((item, index) => {
+      result.push(
+        <div key={`array-item-${index}`} style={{ paddingLeft: indent }}>
+          {renderValue(item)}
+          {index < obj.length - 1 ? "," : ""}
+        </div>
+      );
+    });
+    result.push(
+      <span key={`closing-array-${indent}`} style={{ color: "gray" }}>
+        {"]"}
+      </span>
+    );
+  } else {
+    result.push(...renderObject(obj, indent));
+  }
+
+  return result;
 };
