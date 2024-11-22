@@ -1,46 +1,45 @@
-# Getting Started with Create React App
+# Weekday Date Range Picker Component
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project is a React and TypeScript-based Weekday Date Range Picker that allows users to select a date range restricted to weekdays (Monday through Friday). It excludes weekends (Saturday and Sunday) from being selectable or highlighted.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Features
 
-### `npm start`
+- Select a date range starting and ending on weekdays only.
+- Highlight weekdays within the selected range, excluding weekends.
+- Navigate between months and years to pick dates.
+- Predefined ranges such as "Last 7 Days" or "Last 30 Days".
+- Change handler to return:
+  - The selected weekday range.
+  - Any weekend dates that fall within the selected range.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+---
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Technologies Used
 
-### `npm test`
+- **React**: For building the user interface.
+- **TypeScript**: For type safety and maintainability.
+- **Tailwind CSS**: For modern, responsive, and customizable styling.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone the repository:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+   ```bash
+   git clone <your-repository-link>
+   cd weekday-date-picker
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2. Install dependencies:
 
-### `npm run eject`
+   ```bash
+   npm install
+   ```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+3. Start the dev server:
+   ```bash
+   npm start
+   ```
