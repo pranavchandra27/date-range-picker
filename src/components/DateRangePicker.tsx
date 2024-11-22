@@ -101,38 +101,17 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
     setSelectedData(null);
   };
 
-  const getCalendarDays = (
-    year: number,
-    month: number
-  ): { date: Date; isCurrentMonth: boolean }[] => {
+  const getCalendarDays = (year: number, month: number): (Date | null)[] => {
     const days = getMonthDays(year, month);
     const firstDayOfWeek = days[0].getDay();
     const lastDayOfWeek = days[days.length - 1].getDay();
 
-    const previousMonth = month === 0 ? 11 : month - 1;
-    const previousMonthYear = month === 0 ? year - 1 : year;
-    const previousMonthDays = getMonthDays(previousMonthYear, previousMonth);
-    const leadingDays = previousMonthDays
-      .slice(previousMonthDays.length - firstDayOfWeek)
-      .map((date) => ({
-        date,
-        isCurrentMonth: false,
-      }));
-
-    const nextMonth = month === 11 ? 0 : month + 1;
-    const nextMonthYear = month === 11 ? year + 1 : year;
-    const trailingDays = getMonthDays(nextMonthYear, nextMonth)
-      .slice(0, 6 - lastDayOfWeek)
-      .map((date) => ({
-        date,
-        isCurrentMonth: false,
-      }));
-
-    const currentMonthDays = days.map((date) => ({
-      date,
-      isCurrentMonth: true,
-    }));
-    return [...leadingDays, ...currentMonthDays, ...trailingDays];
+    const leadingEmptyDays = Array.from({ length: firstDayOfWeek }, () => null);
+    const trailingEmptyDays = Array.from(
+      { length: 6 - lastDayOfWeek },
+      () => null
+    );
+    return [...leadingEmptyDays, ...days, ...trailingEmptyDays];
   };
 
   const days = getCalendarDays(currentYear, currentMonth);
@@ -191,36 +170,38 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
         </div>
 
         <div className="grid grid-cols-7 gap-1 text-center">
-          {days.map(({ date, isCurrentMonth }, index) => (
+          {days.map((day, index) => (
             <div
               key={index}
-              className={`py-2 rounded-lg border ${
-                isCurrentMonth ? "cursor-pointer" : "cursor-default"
-              } ${
-                isWeekend(date) && isCurrentMonth
+              className={`py-2 rounded-lg border cursor-pointer ${
+                day === null
+                  ? "bg-transparent cursor-default"
+                  : isWeekend(day)
                   ? "bg-red-200 text-gray-500 cursor-not-allowed"
-                  : isCurrentMonth
-                  ? "hover:bg-gray-200"
-                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "hover:bg-gray-200"
               } ${
-                isCurrentMonth && selectedRange[0] === formatDate(date)
+                day && selectedRange[0] === formatDate(day)
                   ? "bg-green-500 text-white"
-                  : isCurrentMonth && selectedRange[1] === formatDate(date)
+                  : day && selectedRange[1] === formatDate(day)
                   ? "bg-blue-500 text-white"
-                  : isCurrentMonth &&
+                  : day &&
                     selectedRange[0] &&
                     selectedRange[1] &&
-                    new Date(selectedRange[0]) <= date &&
-                    new Date(selectedRange[1]) >= date
+                    new Date(selectedRange[0]) <= day &&
+                    new Date(selectedRange[1]) >= day
                   ? "bg-blue-300 text-white"
                   : ""
               }`}
-              onClick={() => isCurrentMonth && handleDateClick(date)}
-              aria-label={`${
-                isWeekend(date) ? "Weekend" : "Weekday"
-              }: ${date.toDateString()} ${isCurrentMonth ? "" : "(Disabled)"}`}
+              onClick={() => day && handleDateClick(day)}
+              aria-label={
+                day
+                  ? `${
+                      isWeekend(day) ? "Weekend" : "Weekday"
+                    }: ${day.toDateString()}`
+                  : undefined
+              }
             >
-              {date.getDate()}
+              {day ? day.getDate() : ""}
             </div>
           ))}
         </div>
@@ -228,7 +209,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
         <div className="mt-4 flex justify-between items-center">
           <button
             onClick={handleGoToStartDate}
-            className="px-4 py-2 bg-blue-500 text-white font-medium text-sm rounded-lg hover:bg-blue-400"
+            className={`px-4 py-2 bg-blue-500 text-white font-medium text-sm rounded-lg hover:bg-blue-400`}
           >
             Go to {selectedRange[0] ? "Start Date" : "Today"}
           </button>
