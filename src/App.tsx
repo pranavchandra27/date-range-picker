@@ -11,13 +11,13 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen w-full bg-gray-50">
       <div className="h-[10vh] flex items-center justify-center">
-        <h1 className="font-bold text-xl sm:text-3xl text-center mb-4">
+        <h1 className="text-gray-700 font-bold text-xl sm:text-3xl text-center mb-4">
           Date Range Picker
         </h1>
       </div>
-      <div className="h-[90vh] flex items-center justify-center">
+      <div className="h-[90vh] flex justify-center">
         <DateRangePicker
           onChange={handleRangeChange}
           predefinedRanges={[

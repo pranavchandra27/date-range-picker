@@ -16,6 +16,20 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [selectedRange, setSelectedRange] = useState<DateRange>([null, null]);
+  const [selectedData, setSelectedData] = useState<{
+    range: DateRange;
+    weekends: string[];
+  } | null>(null);
+
+  const weekdays = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
 
   const handleDateClick = (date: Date) => {
     if (isWeekend(date)) return;
@@ -27,6 +41,11 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
       const newRange: DateRange = [start, formatDate(date)];
       setSelectedRange(newRange);
       const weekendsInRange = getWeekendDatesInRange(new Date(start), date);
+      const newData = {
+        range: newRange,
+        weekends: weekendsInRange.map(formatDate),
+      };
+      setSelectedData(newData); // Update JSON preview
       onChange(newRange, weekendsInRange.map(formatDate));
     } else {
       setSelectedRange([formatDate(date), null]);
@@ -61,83 +80,147 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
     setCurrentYear(newYear);
   };
 
+  const handleYearChange = (step: number) => {
+    setCurrentYear((prevYear) => prevYear + step);
+  };
+
   const handleGoToStartDate = () => {
     if (selectedRange[0]) {
       const startDate = new Date(selectedRange[0]);
+      setCurrentMonth(startDate.getMonth());
+      setCurrentYear(startDate.getFullYear());
+    } else {
+      const startDate = new Date();
       setCurrentMonth(startDate.getMonth());
       setCurrentYear(startDate.getFullYear());
     }
   };
 
   const handleClearSelection = () => {
-    if (selectedRange[0]) {
-      setSelectedRange([null, null]);
-    }
+    setSelectedRange([null, null]);
+    setSelectedData(null);
   };
 
-  const days = getMonthDays(currentYear, currentMonth);
+  const getCalendarDays = (
+    year: number,
+    month: number
+  ): { date: Date; isCurrentMonth: boolean }[] => {
+    const days = getMonthDays(year, month);
+    const firstDayOfWeek = days[0].getDay();
+    const lastDayOfWeek = days[days.length - 1].getDay();
+
+    const previousMonth = month === 0 ? 11 : month - 1;
+    const previousMonthYear = month === 0 ? year - 1 : year;
+    const previousMonthDays = getMonthDays(previousMonthYear, previousMonth);
+    const leadingDays = previousMonthDays
+      .slice(previousMonthDays.length - firstDayOfWeek)
+      .map((date) => ({
+        date,
+        isCurrentMonth: false,
+      }));
+
+    const nextMonth = month === 11 ? 0 : month + 1;
+    const nextMonthYear = month === 11 ? year + 1 : year;
+    const trailingDays = getMonthDays(nextMonthYear, nextMonth)
+      .slice(0, 6 - lastDayOfWeek)
+      .map((date) => ({
+        date,
+        isCurrentMonth: false,
+      }));
+
+    const currentMonthDays = days.map((date) => ({
+      date,
+      isCurrentMonth: true,
+    }));
+    return [...leadingDays, ...currentMonthDays, ...trailingDays];
+  };
+
+  const days = getCalendarDays(currentYear, currentMonth);
 
   return (
-    <div className="max-w-sm w-full mx-auto">
-      <div className="flex justify-between px-2">
-        {selectedRange[0] && (
-          <p className="font-medium">
-            Start date: <span className="font-mono">{selectedRange[0]}</span>
-          </p>
-        )}
-        {selectedRange[1] && (
-          <p className="font-medium">
-            End date: <span className="font-mono">{selectedRange[1]}</span>
-          </p>
-        )}
-      </div>
-      <div className="p-4 border rounded-lg shadow-lg bg-white">
+    <div className="w-full flex mt-8 items-start justify-center space-x-8">
+      <div className="p-4 max-w-sm w-full border rounded-lg shadow-lg bg-white">
         <header className="flex justify-between items-center mb-4">
+          <div className="flex items-center">
+            <button
+              onClick={() => handleYearChange(-1)}
+              className="p-2 rounded-full hover:bg-gray-200 text-gray-700"
+              aria-label="Previous Year"
+            >
+              <FaArrowLeft />
+            </button>
+            <h2 className="text-lg font-semibold mx-2 text-gray-700">
+              {currentYear}
+            </h2>
+            <button
+              onClick={() => handleYearChange(1)}
+              className="p-2 rounded-full hover:bg-gray-200 text-gray-700"
+              aria-label="Next Year"
+            >
+              <FaArrowRight />
+            </button>
+          </div>
           <button
             onClick={() => handleMonthChange(-1)}
-            className="p-2 rounded-full hover:bg-gray-200"
+            className="p-2 rounded-full hover:bg-gray-200 text-gray-700"
             aria-label="Previous Month"
           >
             <FaArrowLeft />
           </button>
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-lg font-semibold text-gray-700">
             {new Date(currentYear, currentMonth).toLocaleDateString("en-US", {
               month: "long",
-              year: "numeric",
             })}
           </h2>
           <button
             onClick={() => handleMonthChange(1)}
-            className="p-2 rounded-full hover:bg-gray-200"
+            className="p-2 rounded-full hover:bg-gray-200 text-gray-700"
             aria-label="Next Month"
           >
             <FaArrowRight />
           </button>
         </header>
 
+        {/* Weekday Names */}
+        <div className="grid grid-cols-7 gap-1 text-center font-semibold text-gray-700 mb-2">
+          {weekdays.map((day) => (
+            <div key={day} aria-label={day}>
+              {day.slice(0, 3)}
+            </div>
+          ))}
+        </div>
+
         <div className="grid grid-cols-7 gap-1 text-center">
-          {days.map((day) => (
+          {days.map(({ date, isCurrentMonth }, index) => (
             <div
-              key={day.toISOString()}
-              className={`py-2 rounded-lg border cursor-pointer ${
-                isWeekend(day)
-                  ? "bg-red-200 text-gray-500 cursor-not-allowed"
-                  : "hover:bg-blue-200"
+              key={index}
+              className={`py-2 rounded-lg border ${
+                isCurrentMonth ? "cursor-pointer" : "cursor-default"
               } ${
-                selectedRange[0] === formatDate(day)
+                isWeekend(date) && isCurrentMonth
+                  ? "bg-red-200 text-gray-500 cursor-not-allowed"
+                  : isCurrentMonth
+                  ? "hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed"
+              } ${
+                isCurrentMonth && selectedRange[0] === formatDate(date)
                   ? "bg-green-500 text-white"
-                  : selectedRange[1] === formatDate(day)
+                  : isCurrentMonth && selectedRange[1] === formatDate(date)
                   ? "bg-blue-500 text-white"
-                  : selectedRange[0] &&
+                  : isCurrentMonth &&
+                    selectedRange[0] &&
                     selectedRange[1] &&
-                    new Date(selectedRange[0]) <= day &&
-                    new Date(selectedRange[1]) >= day
+                    new Date(selectedRange[0]) <= date &&
+                    new Date(selectedRange[1]) >= date
                   ? "bg-blue-300 text-white"
                   : ""
               }`}
-              onClick={() => handleDateClick(day)}
+              onClick={() => isCurrentMonth && handleDateClick(date)}
+              aria-label={`${
+                isWeekend(date) ? "Weekend" : "Weekday"
+              }: ${date.toDateString()} ${isCurrentMonth ? "" : "(Disabled)"}`}
             >
-              {day.getDate()}
+              {date.getDate()}
             </div>
           ))}
         </div>
@@ -147,14 +230,15 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
             onClick={handleGoToStartDate}
             className="px-4 py-2 bg-blue-500 text-white font-medium text-sm rounded-lg hover:bg-blue-400"
           >
-            Go to Start Date
+            Go to {selectedRange[0] ? "Start Date" : "Today"}
           </button>
 
           <button
             onClick={handleClearSelection}
-            className="px-4 py-2 bg-red-400 text-white font-medium text-sm rounded-lg hover:bg-red-300"
+            disabled={!selectedRange[0]}
+            className="px-4 py-2 bg-red-400 text-white font-medium text-sm rounded-lg hover:bg-red-300 disabled:bg-red-200"
           >
-            Clear selection
+            Clear Selection
           </button>
         </div>
 
@@ -178,7 +262,58 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
           ))}
         </div>
       </div>
+
+      <div className="max-w-[284px] w-full">
+        <h3 className="text-lg font-semibold mb-2">Output:</h3>
+        <pre className="bg-gray-100 p-4 rounded text-sm text-gray-800">
+          {selectedData ? formatJson(selectedData) : "No data selected"}
+        </pre>
+      </div>
     </div>
   );
 };
+
 export default DateRangePicker;
+
+const formatJson = (obj: any): JSX.Element[] => {
+  const renderObject = (obj: any, indent = 0): JSX.Element[] => {
+    const result: JSX.Element[] = [];
+    if (typeof obj === "object" && obj !== null) {
+      result.push(
+        <span key={`opening-${indent}`} style={{ color: "gray" }}>
+          {"{"}
+        </span>
+      );
+
+      for (const key in obj) {
+        const value = obj[key];
+        result.push(
+          <div key={`${key}-${indent}`} style={{ paddingLeft: indent + 20 }}>
+            <span style={{ color: "purple" }}>"{key}"</span>:{" "}
+            {typeof value === "object" && value !== null ? (
+              renderObject(value, indent + 2)
+            ) : (
+              <span
+                style={{
+                  color: typeof value === "number" ? "orange" : "green",
+                }}
+              >
+                {JSON.stringify(value)}
+              </span>
+            )}
+          </div>
+        );
+      }
+
+      result.push(
+        <span key={`closing-${indent}`} style={{ color: "gray" }}>
+          {"}"}
+        </span>
+      );
+    }
+
+    return result;
+  };
+
+  return renderObject(obj);
+};
