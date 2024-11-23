@@ -29,8 +29,8 @@ This project is a React and TypeScript-based Weekday Date Range Picker that allo
 1. Clone the repository:
 
    ```bash
-   git clone <your-repository-link>
-   cd weekday-date-picker
+   git clone https://github.com/pranavchandra27/date-range-picker
+   cd date-range-picker
    ```
 
 2. Install dependencies:
